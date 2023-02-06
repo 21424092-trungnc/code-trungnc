@@ -60,11 +60,27 @@ Private Sub Worksheet_Activate()
                     End If
             Loop While Not myRange Is Nothing And myRange.Address <> firstCell.Address
         End If
-        For i = 1 To totalTask
-            j = Int(2 + Rnd * (Count_Task_In_Role - 2 + 1))
-            randomElements(i) = dictRandom(j)
-        Next i
-        Dim message As String
+        Dim a As Integer
+        a = 1
+        Dim dictRandomNew As Object
+        Set dictRandomNew = CreateObject("Scripting.Dictionary")
+        dictRandomNew.RemoveAll
+        
+        Do While dictRandomNew.Count <= totalTask
+            If dictRandomNew.Count >= totalTask Then
+            Exit Do
+            End If
+        Dim j As Integer
+            j = Int(1 + Rnd * (Count_Task_In_Role - 1 + 1))
+        If dictRandomNew.Exists(dictRandom(j)) Then
+        Else
+        If (dictRandom(j) > 0) Then
+            dictRandomNew.Add dictRandom(j), dictRandom(j)
+            randomElements(a) = dictRandom(j)
+            a = a + 1
+            End If
+        End If
+        Loop
         
         If totalTask > 0 Then
             Dim Time_In_Employee_Mod As Integer
@@ -96,3 +112,4 @@ Private Sub Worksheet_Activate()
         End If
     Next CountEmployee
 End Sub
+
