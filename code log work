@@ -1,0 +1,98 @@
+Private Sub Worksheet_Activate()
+    Dim rng_Role_Task As Range
+    On Error Resume Next
+    Set rng_Role_Task = Application.InputBox(Title:="Select Range Role_Task", Prompt:="Select Range Role_Task", Type:=8)
+    On Error GoTo 0
+    'Test for cancel.
+    If rng_Role_Task Is Nothing Then
+        Exit Sub
+    End If
+    Dim rng_Role_Employee As Range
+    On Error Resume Next
+    Set rng_Role_Employee = Application.InputBox(Title:="Select Range Employee_Task", Prompt:="Select Range Employee_Task", Type:=8)
+    On Error GoTo 0
+    'Test for cancel.
+    If rng_Role_Employee Is Nothing Then
+        Exit Sub
+    End If
+    Dim totalTask As Integer
+    totalTask = Application.InputBox(Title:="Input total task", Prompt:="Input total task", Type:=1)
+    
+    Dim RowStart As Integer
+    RowStart = 1
+    Dim CountEmployee As Integer
+    For CountEmployee = 1 To rng_Role_Employee.Rows.Count
+        Dim FullName As String
+        Dim Logwork_Emp As String
+        Dim Role_Emp As String
+        FullName_Emp = rng_Role_Employee.Range("A" + CStr(CountEmployee)).Value
+        Logwork_Emp = rng_Role_Employee.Range("B" + CStr(CountEmployee)).Value
+        Role_Emp = rng_Role_Employee.Range("C" + CStr(CountEmployee)).Value
+        Dim Count_Task_In_Role As Integer
+        Count_Task_In_Role = Application.WorksheetFunction.CountIf(rng_Role_Task.Columns(1), Role_Emp)
+        If totalTask > Count_Task_In_Role Then
+        totalTask = Count_Task_In_Role
+        End If
+        Dim m As Integer
+        m = ThisWorkbook.Worksheets("Role_Task").Range("A2", ThisWorkbook.Worksheets("Role_Task").Range("B2").End(xlDown)).Rows.Count
+        
+        Dim randomElements() As Integer
+        ReDim randomElements(1 To totalTask)
+        Dim dictRandom As Object
+        Set dictRandom = CreateObject("Scripting.Dictionary")
+        dictRandom.RemoveAll
+        Dim myRange As Range
+        Dim firstCell As Range
+        Set firstCell = ThisWorkbook.Worksheets("Role_Task").Range("$A$2:$A$" & m + 1).Find(Role_Emp)
+        If Not firstCell Is Nothing Then
+            Set myRange = firstCell
+            Dim z As Integer
+            z = 1
+            Do
+                ' Do something with the range
+                Set myRange = ThisWorkbook.Worksheets("Role_Task").Range("$A$2:$A$" & m + 1).FindNext(myRange)
+                Dim rowIndex As Long
+                rowIndex = myRange.Row
+                If dictRandom.Exists(rowIndex) Then
+                Else
+                 dictRandom.Add z, rowIndex
+                 z = z + 1
+                    End If
+            Loop While Not myRange Is Nothing And myRange.Address <> firstCell.Address
+        End If
+        For i = 1 To totalTask
+            j = Int(2 + Rnd * (Count_Task_In_Role - 2 + 1))
+            randomElements(i) = dictRandom(j)
+        Next i
+        Dim message As String
+        
+        If totalTask > 0 Then
+            Dim Time_In_Employee_Mod As Integer
+            Time_In_Employee_Mod = WorksheetFunction.Sum(0 & Logwork_Emp) Mod totalTask
+            
+            Dim Time_In_Employee As Integer
+            Time_In_Employee = (WorksheetFunction.Sum(0 & Logwork_Emp) - Time_In_Employee_Mod) / totalTask
+            
+            Dim CountTask As Integer
+            For CountTask = 1 To totalTask
+            
+                Dim wb As Workbook
+                Dim ws As Worksheet
+                
+                Set wb = ThisWorkbook
+                Set ws = wb.Sheets("Result")
+                Dim Time_Employee As Integer
+                
+                If CountTask <= Time_In_Employee_Mod Then
+                    Time_Employee = Time_In_Employee + 1
+                Else
+                    Time_Employee = Time_In_Employee
+                End If
+                ws.Cells(RowStart, 1).Value = FullName_Emp
+                ws.Cells(RowStart, 2).Value = ThisWorkbook.Worksheets("Role_Task").Range("B" + CStr(randomElements(CountTask)) + ":B" + CStr(randomElements(CountTask))).Value
+                ws.Cells(RowStart, 3).Value = Time_Employee
+                RowStart = RowStart + 1
+            Next CountTask
+        End If
+    Next CountEmployee
+End Sub
